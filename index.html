@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Cmentarz Parafialny w Odrowążu - Interaktywna Mapa Grobów</title>
+  <meta name="description"
+    content="Interaktywny portal cmentarza parafialnego w Odrowążu Podhalańskim. Wyszukiwarka osób pochowanych, mapa grobów, rocznice śmierci.">
+  <meta name="keywords" content="cmentarz, Odrowąż, parafia, mapa grobów, wyszukiwarka zmarłych, groby">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <link rel="stylesheet" href="style.css?v=1.5">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:wght@400;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body class="bg-stone-100 text-stone-800 antialiased">
+
+  <!-- BANER GŁÓWNY -->
+  <header class="h-64 md:h-80 bg-cover bg-center shadow-lg"
+    style="background-image: url('images/banner.jpg'); background-position: center 40%;">
+    <div class="h-full w-full bg-black bg-opacity-40 flex flex-col justify-center items-center text-white p-4">
+      <h1 class="text-3xl md:text-5xl font-bold font-serif text-center" style="font-family: 'Lora', serif;">Cmentarz
+        Parafialny w Odrowążu Podhalańskim</h1>
+      <p class="mt-2 md:text-lg max-w-2xl text-center">Pamięć o tych, którzy odeszli, pozostaje w naszych sercach.</p>
+    </div>
+  </header>
+
+  <!-- GŁÓWNA TREŚĆ STRONY -->
+  <main class="container mx-auto p-4 md:p-8 -mt-16">
+
+    <!-- KARTA Z MAPĄ I WYSZUKIWARKĄ -->
+    <div class="bg-white rounded-lg shadow-2xl overflow-hidden">
+      <div class="p-4 md:p-6 bg-stone-50 border-b border-stone-200">
+        <h2 class="text-xl md:text-2xl font-bold text-stone-700" style="font-family: 'Lora', serif;">Wyszukiwarka Osób
+          Pochowanych</h2>
+        <div class="mt-4 flex flex-col sm:flex-row gap-2">
+          <input type="text" id="filter-name" placeholder="Wpisz imię lub nazwisko..."
+            aria-label="Wyszukaj po imieniu lub nazwisku"
+            class="flex-grow w-full px-4 py-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none transition">
+          <button id="btn-search" aria-label="Szukaj"
+            class="w-full sm:w-auto bg-teal-700 text-white px-6 py-2 rounded-md hover:bg-teal-800 transition-colors duration-300 font-semibold">Szukaj</button>
+          <button id="btn-reset" aria-label="Resetuj wyszukiwanie"
+            class="w-full sm:w-auto bg-stone-200 text-stone-700 px-6 py-2 rounded-md hover:bg-stone-300 transition-colors duration-300">Resetuj</button>
+        </div>
+      </div>
+
+      <!-- PANEL INFORMACYJNY (domyślnie ukryty) -->
+      <section id="info-panel" class="hidden"></section>
+
+      <!-- KONTENER MAPY -->
+      <div id="map" class="w-full h-[60vh] md:h-[70vh]"></div>
+    </div>
+
+    <!-- SEKCJA Z WYNIKAMI WYSZUKIWANIA -->
+    <section id="results-section" class="hidden mt-8 bg-white rounded-lg shadow-2xl overflow-hidden">
+      <div class="p-6">
+        <h3 class="text-xl font-bold text-stone-700 mb-4" style="font-family: 'Lora', serif;">Wyniki Wyszukiwania</h3>
+        <div class="overflow-x-auto border rounded-lg">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-stone-100">
+                <th class="p-3 font-semibold">Imię i Nazwisko</th>
+                <th class="p-3 font-semibold">Data urodzenia</th>
+                <th class="p-3 font-semibold">Data śmierci</th>
+                <th class="p-3 font-semibold">Lokalizacja</th>
+              </tr>
+            </thead>
+            <tbody id="results-tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SEKCJA Z ROCZNICAMI I ZGŁASZANIEM BŁĘDÓW -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+
+      <!-- KARTA: NADCHODZĄCE ROCZNICE -->
+      <div class="bg-white rounded-lg shadow-xl p-6">
+        <h3 class="text-xl font-bold text-stone-700 mb-4" style="font-family: 'Lora', serif;">Nadchodzące Rocznice
+          Śmierci</h3>
+        <div id="anniversaries-list" class="space-y-3">
+          <p id="anniversaries-placeholder" class="text-stone-500">Ładowanie danych...</p>
+        </div>
+      </div>
+
+      <!-- KARTA: ZGŁOŚ BŁĄD -->
+      <div class="bg-white rounded-lg shadow-xl p-6">
+        <h3 class="text-xl font-bold text-stone-700 mb-4" style="font-family: 'Lora', serif;">Znalazłeś błąd w danych?
+        </h3>
+        <p id="report-error-intro" class="text-stone-600 mb-4">
+          Jeśli zauważyłeś pomyłkę lub posiadasz informacje, które mogą pomóc w uzupełnieniu bazy, prosimy o kontakt.
+        </p>
+        <button id="report-error-btn"
+          class="inline-block bg-teal-700 text-white px-6 py-2 rounded-md hover:bg-teal-800 transition-colors duration-300 font-semibold">
+          Zgłoś błąd
+        </button>
+        <div id="report-error-form-container" class="mt-4 pt-4 border-t">
+          <form id="contact-form">
+            <div class="mb-4">
+              <label for="reporter-name" class="block text-sm font-medium text-stone-700">Imię i nazwisko
+                zgłaszającego</label>
+              <input type="text" id="reporter-name" name="name" required
+                class="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-stone-700 mb-1">Lokalizacja grobu, którego dotyczy
+                zgłoszenie</label>
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <input type="text" name="kwatera" placeholder="Kwatera"
+                    class="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                </div>
+                <div>
+                  <input type="text" name="rzad" placeholder="Rząd"
+                    class="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                </div>
+                <div>
+                  <input type="text" name="miejsce" placeholder="Miejsce"
+                    class="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                </div>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="error-description" class="block text-sm font-medium text-stone-700">Treść wiadomości</label>
+              <textarea id="error-description" name="message" rows="4" required
+                class="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"></textarea>
+            </div>
+            <button type="submit" id="form-submit-btn"
+              class="w-full bg-teal-700 text-white px-6 py-2 rounded-md hover:bg-teal-800 transition-colors duration-300 font-semibold">Wyślij
+              zgłoszenie</button>
+          </form>
+          <div id="form-status-message" class="hidden mt-4 text-center p-3 rounded-md"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- STOPKA -->
+  <footer class="bg-stone-800 text-stone-300 mt-12 py-8">
+    <div class="container mx-auto text-center px-4">
+      <p>&copy; 2024 Parafia Rzymskokatolicka pw. św. Marii Magdaleny w Odrowążu</p>
+      <p class="text-sm text-stone-400 mt-2">Projekt i wykonanie: Paweł Szymusiak</p>
+    </div>
+  </footer>
+
+  <!-- MODAL GALERII ZDJĘĆ (domyślnie ukryty) -->
+  <div id="gallery-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+    <button id="gallery-close" aria-label="Zamknij galerię"
+      class="absolute top-4 right-4 text-white text-5xl leading-none hover:text-stone-300">&times;</button>
+    <button id="gallery-prev" aria-label="Poprzednie zdjęcie"
+      class="absolute left-4 text-white text-5xl hover:text-stone-300">&#8249;</button>
+    <button id="gallery-next" aria-label="Następne zdjęcie"
+      class="absolute right-4 text-white text-5xl hover:text-stone-300">&#8250;</button>
+    <div class="relative">
+      <img id="gallery-image" src="" alt="Zdjęcie grobu" class="object-contain" loading="lazy">
+    </div>
+  </div>
+
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js" defer></script>
+  <script src="script.js?v=1.5" defer></script>
+</body>
+
+</html>

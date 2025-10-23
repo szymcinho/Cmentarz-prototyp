@@ -1,0 +1,91 @@
+/* Ustawienie domyślnych czcionek dla całej strony */
+body {
+	font-family: 'Inter', sans-serif;
+	scroll-behavior: smooth;
+}
+
+/* Klasa pomocnicza do ukrywania elementów */
+.hidden {
+	display: none;
+}
+
+/* Stylizacja kontenera mapy w Leaflet */
+#map {
+	background-color: #e5e7eb; /* Jasnoszary kolor tła na czas ładowania mapy */
+}
+
+/* Upewnienie się, że kontrolki Leaflet (np. zoom, przełącznik warstw) są nad innymi elementami */
+.leaflet-control-container {
+	z-index: 10;
+}
+
+/* Poprawka dla panelu z atrybucją (prawy dolny róg mapy), aby tekst był czytelny */
+.leaflet-control-attribution {
+	background: rgba(255, 255, 255, 0.7) !important;
+	color: #333;
+	padding: 2px 5px;
+	border-radius: 3px;
+}
+
+/* Style dla tabeli wyników */
+#results-section table tbody tr {
+	border-bottom: 1px solid #f3f4f6; /* Jasne tło dla linii */
+	transition: background-color 0.2s ease-in-out;
+}
+
+#results-section table tbody tr:last-child {
+	border-bottom: none;
+}
+
+#results-section table tbody tr:hover {
+	background-color: #fafaf9; /* Bardzo jasny kolor tła po najechaniu */
+	cursor: pointer;
+}
+
+/* Style dla rozwijanego formularza */
+#report-error-form-container {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.5s ease-in-out;
+}
+#report-error-form-container.open {
+	max-height: 500px; /* Wystarczająco duża wartość, aby zmieścić formularz */
+}
+
+/* Style dla galerii zdjęć (lightbox) */
+#gallery-image {
+	height: auto;
+	max-width: 90vw;
+	max-height: 90vh;
+	cursor: grab; /* Kursor wskazujący na możliwość przeciągania */
+	transform-origin: center center;
+	transition: transform 0.1s ease-out; /* Płynne przejście dla zoomu */
+}
+
+/* Dodatkowa klasa do zmiany kursora podczas przeciągania */
+#gallery-image.grabbing {
+	cursor: grabbing;
+}
+
+/* Ustawienie wysokiego z-index dla galerii, aby była nad mapą Leaflet */
+#gallery-modal {
+	z-index: 2000; /* Leaflet używa z-index do 1000, więc 2000 jest bezpieczną wartością */
+}
+
+/* Style responsywne dla mniejszych urządzeń */
+@media (max-width: 768px) {
+	/* Zmniejszenie czcionki w tabeli wyników */
+	#results-section table td,
+	#results-section table th {
+		font-size: 0.875rem; /* 14px */
+		padding: 0.5rem;
+	}
+
+	/* Zmniejszenie czcionki w sekcji rocznic */
+	.anniversary-item .font-semibold {
+		font-size: 0.875rem; /* 14px */
+	}
+	.anniversary-item .text-sm {
+		font-size: 0.75rem; /* 12px */
+	}
+}
