@@ -9,7 +9,7 @@
 const CONFIG = {
 	// Adres URL do publicznego pliku CSV z danymi z Arkusza Google
 	googleSheetUrl:
-		'https://docs.google.com/spreadsheets/d/e/2PACX-1vR4uPrH2HlEG9Yfeo-XA5RG1GOnAQ3JEFZIgS4abTir_2XIy2SxqDwGSK4hCX7W9GAH2kgEHLE-s9G4/pubhtml',
+		'https://docs.google.com/spreadsheets/d/e/2PACX-1vR4uPrH2HlEG9Yfeo-XA5RG1GOnAQ3JEFZIgS4abTir_2XIy2SxqDwGSK4hCX7W9GAH2kgEHLE-s9G4/pub?output=csv',
 	// Adres URL do formularza kontaktowego z serwisu Formspree
 	formspreeUrl: 'https://formspree.io/f/xnnbkljy',
 	// Współrzędne początkowe i poziom zoomu dla mapy
@@ -626,5 +626,6 @@ function initGalleryEventListeners() {
 	galleryImage.addEventListener('wheel', handleWheel);
 	galleryImage.addEventListener('mousedown', handleMouseDown);
 }
+
 
 
