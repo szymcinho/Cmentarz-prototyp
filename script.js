@@ -69,6 +69,7 @@ function initMap() {
 		maxZoom: CONFIG.mapDefaults.maxZoom,
 	})
 
+	// Definicja warstw bazowych
 	const googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
 		subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
 		attribution: '&copy; Google',
@@ -80,12 +81,14 @@ function initMap() {
 		maxZoom: 19,
 	})
 
+	// Definicja warstwy nakładkowej (ortofotomapa) przy użyciu ścieżki względnej
 	const ortho = L.tileLayer('tiles/{z}/{x}/{y}.png', {
 		attribution: 'Ortofotomapa',
 		minZoom: 18,
 		maxZoom: 23,
 	}).addTo(map)
 
+	// Dodanie kontrolki do przełączania warstw
 	L.control
 		.layers(
 			{
@@ -101,6 +104,7 @@ function initMap() {
 		)
 		.addTo(map)
 
+	// Inicjalizacja grupy markerów z klastrowaniem
 	markersGroup = L.markerClusterGroup({
 		chunkedLoading: true,
 		disableClusteringAtZoom: 22,
@@ -131,9 +135,13 @@ function fetchData() {
  */
 function processData(rows) {
 	rows.forEach(item => {
+		// Wymagaj tylko lat, lng i kwatery. Rząd i miejsce mogą być puste.
 		if (!item.lat || !item.lng || !item.kwatera) return
 
+		// Klucz dla logiki aplikacji (np. 'B0_1' gdy rząd jest pusty)
 		const appKey = [item.kwatera, item.rzad, item.miejsce].filter(Boolean).join('_')
+
+		// Klucz dla nazw plików zdjęć (np. 'B0__1' gdy rząd jest pusty)
 		const photoKey = [item.kwatera, item.rzad || '', item.miejsce || ''].join('_')
 
 		if (!allTombs[appKey]) {
@@ -141,7 +149,9 @@ function processData(rows) {
 				lat: parseFloat(item.lat),
 				lng: parseFloat(item.lng),
 				persons: [],
+				// Użyj nowego klucza dla zdjęć
 				photos: [`images/${photoKey}_1.jpg`, `images/${photoKey}_2.jpg`],
+				// Zapisz poszczególne części dla późniejszego wyświetlania
 				kwatera: item.kwatera,
 				rzad: item.rzad || '',
 				miejsce: item.miejsce || '',
@@ -206,8 +216,8 @@ function showInfoPanel(key) {
     <div class="p-4 md:p-6 border-b border-stone-200 bg-stone-50/50">
         <div class="flex flex-col md:flex-row md:justify-center md:items-start gap-4">
             <div class="flex flex-row gap-4 w-full md:w-auto">
-                <img src="${tomb.photos[0]}" alt="Zdjęcie grobu ${kwatera} ${rzad} ${miejsce}" class="gallery-img w-1/2 md:w-[300px] h-auto rounded-lg cursor-pointer hover:opacity-80 transition object-contain" loading="lazy" onerror="this.style.display='none'">
-                <img src="${tomb.photos[1]}" alt="Zdjęcie tablicy grobu ${kwatera} ${rzad} ${miejsce}" class="gallery-img w-1/2 md:w-[300px] h-auto rounded-lg cursor-pointer hover:opacity-80 transition object-contain" loading="lazy" onerror="this.style.display='none'">
+                <img src="${tomb.photos[0]}" alt="Zdjęcie grobu" class="gallery-img w-1/2 md:w-[300px] h-auto rounded-lg cursor-pointer hover:opacity-80 transition object-contain">
+                <img src="${tomb.photos[1]}" alt="Zdjęcie tablicy" class="gallery-img w-1/2 md:w-[300px] h-auto rounded-lg cursor-pointer hover:opacity-80 transition object-contain">
             </div>
             <div class="flex-grow md:pl-5 md:max-w-md">
                 ${personsHTML}
@@ -239,10 +249,18 @@ function applyFilter() {
 	const filterText = document.getElementById('filter-name').value.toLowerCase().trim()
 	if (!filterText) return
 
+	// ZMIANA: Podziel zapytanie na słowa
+	const searchWords = filterText.split(' ').filter(Boolean) // Usuwa puste frazy (np. po podwójnej spacji)
+
 	const flatMatches = []
 	Object.entries(allTombs).forEach(([key, tomb]) => {
 		tomb.persons.forEach(person => {
-			if (person.name.toLowerCase().includes(filterText)) {
+			const personNameLower = person.name.toLowerCase()
+
+			// ZMIANA: Sprawdź, czy KAŻDE słowo z zapytania znajduje się w imieniu i nazwisku
+			const isMatch = searchWords.every(word => personNameLower.includes(word))
+
+			if (isMatch) {
 				flatMatches.push({
 					...person,
 					tombKey: key,
@@ -301,7 +319,11 @@ function romanToNumber(roman) {
  * @returns {{number: number, suffix: string}}
  */
 function parsePlace(place) {
-	if (!place) return { number: 0, suffix: '' }
+	if (!place)
+		return {
+			number: 0,
+			suffix: '',
+		}
 	const match = place.match(/^(\d+)(.*)$/)
 	if (match) {
 		return {
@@ -309,7 +331,10 @@ function parsePlace(place) {
 			suffix: match[2].toLowerCase(),
 		}
 	}
-	return { number: 0, suffix: place.toLowerCase() }
+	return {
+		number: 0,
+		suffix: place.toLowerCase(),
+	}
 }
 
 /**
